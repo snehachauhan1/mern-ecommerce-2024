@@ -216,7 +216,7 @@ export const addressFormControls = [
     placeholder: "Enter your phone number",
   },
   {
-    label: "Notes",
+    label: "Notes (Optional)",
     name: "notes",
     componentType: "textarea",
     placeholder: "Enter any additional notes",

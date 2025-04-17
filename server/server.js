@@ -19,7 +19,7 @@ const commonFeatureRouter = require("./routes/common/feature-routes");
 //create a separate file for this and then import/use that file here
 
 mongoose
-  .connect("db_url")
+  .connect("mongodb+srv://prafullshukla11:Prafull%402003@ecommerce-cluster.ich5dr7.mongodb.net/myDatabase?retryWrites=true&w=majority&appName=ecommerce-cluster")
   .then(() => console.log("MongoDB connected"))
   .catch((error) => console.log(error));
 
@@ -55,5 +55,8 @@ app.use("/api/shop/search", shopSearchRouter);
 app.use("/api/shop/review", shopReviewRouter);
 
 app.use("/api/common/feature", commonFeatureRouter);
+const razorpayRouter = require("./routes/shop/razorpay-routes");
+app.use("/api/shop/razorpay", razorpayRouter);
+
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));

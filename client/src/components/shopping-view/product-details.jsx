@@ -16,6 +16,8 @@ import { addReview, getReviews } from "@/store/shop/review-slice";
 function ProductDetailsDialog({ open, setOpen, productDetails }) {
   const [reviewMsg, setReviewMsg] = useState("");
   const [rating, setRating] = useState(0);
+  const [showFullDesc, setShowFullDesc] = useState(false);
+
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -23,9 +25,13 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
 
   const { toast } = useToast();
 
-  function handleRatingChange(getRating) {
-    console.log(getRating, "getRating");
+  const getShortDesc = (desc, wordLimit = 20) => {
+    const words = desc?.split(" ") || [];
+    if (words.length <= wordLimit) return desc;
+    return words.slice(0, wordLimit).join(" ") + "...";
+  };
 
+  function handleRatingChange(getRating) {
     setRating(getRating);
   }
 
@@ -43,11 +49,11 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
             title: `Only ${getQuantity} quantity can be added for this item`,
             variant: "destructive",
           });
-
           return;
         }
       }
     }
+
     dispatch(
       addToCart({
         userId: user?.id,
@@ -96,17 +102,16 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
     if (productDetails !== null) dispatch(getReviews(productDetails?._id));
   }, [productDetails]);
 
-  console.log(reviews, "reviews");
-
   const averageReview =
     reviews && reviews.length > 0
-      ? reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) /
-        reviews.length
+      ? reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) / reviews.length
       : 0;
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="grid grid-cols-2 gap-8 sm:p-12 max-w-[90vw] sm:max-w-[80vw] lg:max-w-[70vw]">
+      <DialogContent className="hide-scrollbar fixed left-1/2 top-1/2 z-50 w-full max-h-[500px] translate-x-[-50%] translate-y-[-50%] border bg-white/90 p-6 shadow-2xl duration-300 ease-in-out backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-2xl grid grid-cols-1 lg:grid-cols-2 gap-8 sm:p-12 max-w-[90vw] sm:max-w-[80vw] lg:max-w-[70vw] overflow-y-auto">
+
+
         <div className="relative overflow-hidden rounded-lg">
           <img
             src={productDetails?.image}
@@ -119,9 +124,19 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
         <div className="">
           <div>
             <h1 className="text-3xl font-extrabold">{productDetails?.title}</h1>
-            <p className="text-muted-foreground text-2xl mb-5 mt-4">
-              {productDetails?.description}
+            <p className="text-muted-foreground text-2xl mt-4">
+              {showFullDesc
+                ? productDetails?.description
+                : getShortDesc(productDetails?.description)}
             </p>
+            {(productDetails?.description?.split(" ").length || 0) > 20 && (
+              <button
+                className="text-sm text-blue-600 hover:underline mb-5"
+                onClick={() => setShowFullDesc(!showFullDesc)}
+              >
+                {showFullDesc ? "Show Less" : "Read More"}
+              </button>
+            )}
           </div>
           <div className="flex items-center justify-between">
             <p
@@ -141,23 +156,16 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
             <div className="flex items-center gap-0.5">
               <StarRatingComponent rating={averageReview} />
             </div>
-            <span className="text-muted-foreground">
-              ({averageReview.toFixed(2)})
-            </span>
+            <span className="text-muted-foreground">({averageReview.toFixed(2)})</span>
           </div>
           <div className="mt-5 mb-5">
             {productDetails?.totalStock === 0 ? (
-              <Button className="w-full opacity-60 cursor-not-allowed">
-                Out of Stock
-              </Button>
+              <Button className="w-full opacity-60 cursor-not-allowed">Out of Stock</Button>
             ) : (
               <Button
                 className="w-full"
                 onClick={() =>
-                  handleAddToCart(
-                    productDetails?._id,
-                    productDetails?.totalStock
-                  )
+                  handleAddToCart(productDetails?._id, productDetails?.totalStock)
                 }
               >
                 Add to Cart
@@ -170,7 +178,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
             <div className="grid gap-6">
               {reviews && reviews.length > 0 ? (
                 reviews.map((reviewItem) => (
-                  <div className="flex gap-4">
+                  <div className="flex gap-4" key={reviewItem._id}>
                     <Avatar className="w-10 h-10 border">
                       <AvatarFallback>
                         {reviewItem?.userName[0].toUpperCase()}
@@ -207,10 +215,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
                 onChange={(event) => setReviewMsg(event.target.value)}
                 placeholder="Write a review..."
               />
-              <Button
-                onClick={handleAddReview}
-                disabled={reviewMsg.trim() === ""}
-              >
+              <Button onClick={handleAddReview} disabled={reviewMsg.trim() === ""}>
                 Submit
               </Button>
             </div>

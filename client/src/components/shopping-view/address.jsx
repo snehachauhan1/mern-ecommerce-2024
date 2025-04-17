@@ -100,10 +100,10 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
   }
 
   function isFormValid() {
-    return Object.keys(formData)
-      .map((key) => formData[key].trim() !== "")
-      .every((item) => item);
+    const requiredFields = ["address", "city", "phone", "pincode"]; 
+    return requiredFields.every((key) => formData[key].trim() !== "");
   }
+  
 
   useEffect(() => {
     dispatch(fetchAllAddresses(user?.id));
